@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  go_router: ^14.0.0
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +21,4 @@ flutter:
   assets:
     - assets/logo_light.png
     - assets/logo_dark.png
+    - assets/photo1.jpg

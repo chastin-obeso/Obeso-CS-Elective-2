@@ -1,49 +1,47 @@
 import 'package:flutter/material.dart';
-import 'appbar.dart';
+import 'package:go_router/go_router.dart';
 import 'app/theme.dart';
+import '/app/route.dart';
+import 'package:flutter_web_plugins/url_strategy.dart'; 
+
 void main() {
-  // Disable debug banner
-  runApp(
-    
-    const RallyRedApp()
-    );
+  usePathUrlStrategy();
+  runApp(const RallyRedApp());
 }
 
 class RallyRedApp extends StatefulWidget {
   const RallyRedApp({super.key});
+
+  // Allows descendant widgets to find state
+  static _RallyRedAppState of(BuildContext context) =>
+      context.findAncestorStateOfType<_RallyRedAppState>()!;
 
   @override
   State<RallyRedApp> createState() => _RallyRedAppState();
 }
 
 class _RallyRedAppState extends State<RallyRedApp> {
-  // 1. Theme state variable
-  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode themeMode = ThemeMode.light;
 
-  // 2. Toggle function
-  void _toggleTheme() {
+  void toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      themeMode =
+          themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
 
+  // Pure static router, no need to pass callbacks!
+  late final GoRouter _router = AppRouter.createRouter(onThemeToggle: toggleTheme);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'RallyRed',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: _themeMode, // Controlled by state
-      home: Scaffold(
-        appBar: CustomAppBar(
-          title: 'RallyRed',
-          onThemeToggle: _toggleTheme, // <--- Pass function here directly
-        ),
-        body: const Center(
-          child: Text('Welcome to RallyRed!'),
-        ),
-      ),
+      themeMode: themeMode,
+      routerConfig: _router,
     );
   }
 }

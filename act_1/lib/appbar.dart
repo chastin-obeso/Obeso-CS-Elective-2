@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'main.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -8,7 +9,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final PreferredSizeWidget? bottom;
-  final VoidCallback? onThemeToggle;
 
   const CustomAppBar({
     super.key,
@@ -17,7 +17,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.bottom,
-    this.onThemeToggle,
   });
 
   @override
@@ -27,19 +26,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return AppBar(
-      centerTitle: true,
+      // Set to false so the title slot (holding the logo) stays left-aligned next to leading slot
+      centerTitle: false,
+      titleSpacing: 0, 
       backgroundColor: colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
       elevation: 0,
       scrolledUnderElevation: 0.5,
-      automaticallyImplyLeading: showBackButton,
+      automaticallyImplyLeading: false,
 
-      // 1. Adaptive Leading Width & Widget
-      leadingWidth: showBackButton ? null : 190,
-      leading: leading ?? _buildDefaultLeading(context, isDarkMode, isIOS),
+      // 1. Unconstrained Logo inside title slot
+      title: Padding(
+        padding: EdgeInsets.only(left: showBackButton ? 0.0 : 16.0),
+        child: Image.asset(
+          isDarkMode ? 'assets/logo_dark.png' : 'assets/logo_light.png',
+          fit: BoxFit.contain,
+          height: 36, // Fixed height allows native aspect ratio/width without constraints
+        ),
+      ),
 
+      // 2. Navigation only in leading slot
+      leading: leading ?? _buildDefaultLeading(context, isIOS),
 
-      // 2. Adaptive Actions Slot
+      // 3. Adaptive Actions Slot
       actions: actions ?? _buildDefaultActions(context, isDarkMode, isIOS),
 
       bottom: bottom,
@@ -47,28 +56,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   // --- Adaptive Leading Widget ---
-  Widget _buildDefaultLeading(BuildContext context, bool isDarkMode, bool isIOS) {
-    if (showBackButton) {
-      // Custom adaptive back button if preferred over automatic imply leading
-      return IconButton(
-        icon: Icon(
-          isIOS ? CupertinoIcons.back : Icons.arrow_back,
-        ),
-        onPressed: () => Navigator.of(context).maybePop(),
-      );
-    }
+  Widget? _buildDefaultLeading(BuildContext context, bool isIOS) {
+    if (!showBackButton) return null;
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 50.0, top: 8.0, bottom: 8.0),
-      child: Image.asset(
-        isDarkMode ? 'assets/logo_dark.png' : 'assets/logo_light.png',
-        fit: BoxFit.contain,
+    return IconButton(
+      icon: Icon(
+        isIOS ? CupertinoIcons.back : Icons.arrow_back,
       ),
+      onPressed: () {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.goNamed('home');
+        }
+      },
     );
   }
 
   // --- Adaptive Actions List ---
-  List<Widget> _buildDefaultActions(BuildContext context, bool isDarkMode, bool isIOS) {
+  List<Widget> _buildDefaultActions(
+    BuildContext context,
+    bool isDarkMode,
+    bool isIOS,
+  ) {
     return [
       IconButton(
         icon: Icon(
@@ -92,9 +102,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ? (isIOS ? CupertinoIcons.sun_max : Icons.light_mode_outlined)
               : (isIOS ? CupertinoIcons.moon : Icons.dark_mode_outlined),
         ),
-        onPressed: onThemeToggle,
+        onPressed: () => RallyRedApp.of(context).toggleTheme(),
       ),
-      const SizedBox(width: 50),
+      const SizedBox(width: 16),
     ];
   }
 
