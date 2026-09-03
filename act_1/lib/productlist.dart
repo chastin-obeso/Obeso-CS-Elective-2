@@ -36,7 +36,6 @@ class ProductList extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 600;
-
     final crossAxisCount = isTablet ? 3 : 2;
 
     final double horizontalPadding = screenWidth < 600
@@ -52,7 +51,6 @@ class ProductList extends StatelessWidget {
       ),
       child: GridView.builder(
         shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
         itemCount: products.length, 
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
@@ -120,7 +118,7 @@ class ProductList extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product.name, // 7. Display dynamic name
+                      product.name, 
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -131,7 +129,7 @@ class ProductList extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\P${product.price.toStringAsFixed(2)}', // 8. Display dynamic price formatted safely
+                      '\P${product.price.toStringAsFixed(2)}', 
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
