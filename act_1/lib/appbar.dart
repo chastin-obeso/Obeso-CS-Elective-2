@@ -26,7 +26,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
 
     return AppBar(
-      // Set to false so the title slot (holding the logo) stays left-aligned next to leading slot
       centerTitle: false,
       titleSpacing: 0, 
       backgroundColor: colorScheme.surface,
@@ -35,27 +34,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0.5,
       automaticallyImplyLeading: false,
 
-      // 1. Unconstrained Logo inside title slot
       title: Padding(
         padding: EdgeInsets.only(left: showBackButton ? 0.0 : 16.0),
         child: Image.asset(
           isDarkMode ? 'assets/logo_dark.png' : 'assets/logo_light.png',
           fit: BoxFit.contain,
-          height: 36, // Fixed height allows native aspect ratio/width without constraints
+          height: 36, 
         ),
       ),
 
-      // 2. Navigation only in leading slot
       leading: leading ?? _buildDefaultLeading(context, isIOS),
 
-      // 3. Adaptive Actions Slot
       actions: actions ?? _buildDefaultActions(context, isDarkMode, isIOS),
 
       bottom: bottom,
     );
   }
 
-  // --- Adaptive Leading Widget ---
   Widget? _buildDefaultLeading(BuildContext context, bool isIOS) {
     if (!showBackButton) return null;
 
@@ -73,7 +68,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // --- Adaptive Actions List ---
   List<Widget> _buildDefaultActions(
     BuildContext context,
     bool isDarkMode,
@@ -85,7 +79,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           isIOS ? CupertinoIcons.search : Icons.search,
         ),
         onPressed: () {
-          // Open search screen/modal
+
         },
       ),
       IconButton(
@@ -93,7 +87,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           isIOS ? CupertinoIcons.shopping_cart : Icons.shopping_cart_outlined,
         ),
         onPressed: () {
-          // Open cart feature
+
         },
       ),
       IconButton(

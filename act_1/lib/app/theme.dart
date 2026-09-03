@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 abstract class AppColors {
   static const Color primarySeed = Color.fromARGB(255, 180, 19, 19);
 
-  // Light Mode Colors
   static const Color lightBackground = Color(0xFFF8F9FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
 
-  // Dark Mode Colors
   static const Color darkBackground = Color(0xFF121212);
   static const Color darkSurface = Color(0xFF1E1E1E);
 }
@@ -15,7 +13,6 @@ abstract class AppColors {
 class AppTheme {
   AppTheme._();
 
-  // ==================== LIGHT THEME ====================
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primarySeed,
@@ -38,7 +35,6 @@ class AppTheme {
     );
   }
 
-  // ==================== DARK THEME ====================
   static ThemeData get darkTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primarySeed,
@@ -61,7 +57,6 @@ class AppTheme {
     );
   }
 
-  // ==================== SHARED COMPONENT STYLES ====================
   static AppBarTheme _appBarTheme(ColorScheme colors) {
     return AppBarTheme(
       centerTitle: true,

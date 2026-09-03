@@ -47,8 +47,18 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             HeroBannerWidget(),
-            ProductList(),
             SizedBox(height: 24),
+            Text(
+              'Product List',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            ProductList(),
+            SizedBox(height: 60),
+            Text(
+              '© 2026 RallyRed. All rights reserved.',
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 44),
           ],
         ),
       ),

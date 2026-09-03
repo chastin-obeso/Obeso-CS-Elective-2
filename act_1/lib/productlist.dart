@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-
 class Product {
   final String id;
   final String name;
@@ -19,7 +18,6 @@ class Product {
 class ProductList extends StatelessWidget {
   const ProductList({super.key});
 
- 
   final List<Product> products = const [
     Product(id: '1', name: 'Sypik Triton 5', price: 10490.00),
     Product(id: '2', name: 'Pro Tour Pickleball Bag', price: 4500.00),
@@ -35,12 +33,21 @@ class ProductList extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth >= 600;
-    final crossAxisCount = isTablet ? 3 : 2;
+
+    final int crossAxisCount;
+    if (screenWidth >= 1024) {
+      crossAxisCount = 4; // Desktop
+    } else if (screenWidth >= 600) {
+      crossAxisCount = 3; // Tablet
+    } else {
+      crossAxisCount = 2; // Phone
+    }
 
     final double horizontalPadding = screenWidth < 600
         ? (screenWidth * 0.03).clamp(8.0, 16.0)
-        : (screenWidth * 0.18).clamp(32.0, 300.0);
+        : screenWidth >= 1024
+            ? (screenWidth * 0.10).clamp(24.0, 150.0)
+            : (screenWidth * 0.18).clamp(32.0, 300.0);
 
     final dynamicSpacing = (screenWidth * 0.03).clamp(10.0, 24.0);
 
@@ -129,7 +136,7 @@ class ProductList extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\P${product.price.toStringAsFixed(2)}', 
+                      '₱${product.price.toStringAsFixed(2)}', 
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
