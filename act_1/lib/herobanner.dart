@@ -10,13 +10,12 @@ class HeroBannerWidget extends StatelessWidget {
     super.key,
     this.height,
     this.title = 'LATEST RELEASES',
-    this.subtitle = 'Redefining Performance & Style',
+    this.subtitle = 'Pickleball Gear Endorsed by Hayden Patriquin',
     this.imagePath = 'assets/photo1.jpg',
   });
 
   @override
   Widget build(BuildContext context) {
-    // 1. Dynamic Height: Default to 30% of screen height if no height provided
     final screenHeight = MediaQuery.of(context).size.height;
     final responsiveHeight = height ?? (screenHeight * 0.30).clamp(200.0, 450.0);
 

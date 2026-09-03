@@ -12,7 +12,6 @@ void main() {
 class RallyRedApp extends StatefulWidget {
   const RallyRedApp({super.key});
 
-  // Allows descendant widgets to find state
   static _RallyRedAppState of(BuildContext context) =>
       context.findAncestorStateOfType<_RallyRedAppState>()!;
 
@@ -30,7 +29,6 @@ class _RallyRedAppState extends State<RallyRedApp> {
     });
   }
 
-  // Pure static router, no need to pass callbacks!
   late final GoRouter _router = AppRouter.createRouter(onThemeToggle: toggleTheme);
 
   @override

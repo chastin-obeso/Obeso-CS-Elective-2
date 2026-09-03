@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-// 1. Define a simple Product model
+
 class Product {
   final String id;
   final String name;
   final double price;
-  final String? imageUrl; // Optional: for real image paths later
+  final String? imageUrl;
 
   const Product({
     required this.id,
@@ -19,7 +19,7 @@ class Product {
 class ProductList extends StatelessWidget {
   const ProductList({super.key});
 
-  // 2. Define your array of products here
+ 
   final List<Product> products = const [
     Product(id: '1', name: 'Sypik Triton 5', price: 10490.00),
     Product(id: '2', name: 'Pro Tour Pickleball Bag', price: 4500.00),
@@ -53,7 +53,7 @@ class ProductList extends StatelessWidget {
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: products.length, // 3. Dynamically set length from array
+        itemCount: products.length, 
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: dynamicSpacing,
@@ -61,7 +61,7 @@ class ProductList extends StatelessWidget {
           childAspectRatio: 0.85,
         ),
         itemBuilder: (context, index) {
-          final product = products[index]; // 4. Grab individual product
+          final product = products[index]; 
           return _buildProductCard(context, colorScheme, product);
         },
       ),
@@ -71,7 +71,7 @@ class ProductList extends StatelessWidget {
   Widget _buildProductCard(
     BuildContext context,
     ColorScheme colorScheme,
-    Product product, // 5. Accept the Product model instead of index
+    Product product, 
   ) {
     return Material(
       color: Colors.transparent,
@@ -80,7 +80,7 @@ class ProductList extends StatelessWidget {
         onTap: () {
           context.goNamed(
             'productDetail',
-            pathParameters: {'id': product.id}, // 6. Use dynamic product ID
+            pathParameters: {'id': product.id}, 
           );
         },
         child: Container(

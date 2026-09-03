@@ -5,8 +5,7 @@ import '/productlist.dart';
 import '/appbar.dart';
 
 class AppRouter {
-  // 1. Pass the callback into a method that returns the configured GoRouter instance
-  static GoRouter createRouter({required VoidCallback onThemeToggle}) {
+    static GoRouter createRouter({required VoidCallback onThemeToggle}) {
     return GoRouter(
       initialLocation: '/',
       routes: [
@@ -33,7 +32,6 @@ class AppRouter {
   }
 }
 
-// 2. Accept VoidCallback in HomeScreen
 class HomeScreen extends StatelessWidget {
   final VoidCallback onThemeToggle;
 
@@ -43,7 +41,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'RallyRed', // Passed directly to CustomAppBar
+        title: 'RallyRed', 
       ),
       body: const SingleChildScrollView(
         child: Column(
