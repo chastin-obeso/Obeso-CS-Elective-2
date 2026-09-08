@@ -3,24 +3,43 @@ import 'package:go_router/go_router.dart';
 import '/herobanner.dart';
 import '/productlist.dart';
 import '/appbar.dart';
+import '/productdetail.dart';
+import '/cartstate.dart';
+import '/main.dart';
+import '/cart.dart';
 
 class AppRouter {
-    static GoRouter createRouter({required VoidCallback onThemeToggle}) {
+    static GoRouter createRouter({required VoidCallback onThemeToggle, required CartModel cartModel}) {
     return GoRouter(
       initialLocation: '/',
       routes: [
         GoRoute(
           path: '/',
           name: 'home',
-          builder: (context, state) => HomeScreen(onThemeToggle: onThemeToggle),
+          builder: (context, state) => HomeScreen(onThemeToggle: onThemeToggle, cartModel: cartModel),
         ),
         GoRoute(
           path: '/product/:id',
           name: 'productDetail',
           builder: (context, state) {
             final productId = state.pathParameters['id'] ?? '0';
-            return ProductDetailScreen(productId: productId, onThemeToggle: onThemeToggle);
+            return ProductDetailScreen(productId: productId, cartModel: cartModel);
           },
+        ),
+        GoRoute(
+          path: '/cart',
+          name: 'cart',
+          builder: (context, state) => Scaffold(
+            appBar: CustomAppBar(
+              title: 'Cart',
+              showBackButton: true,
+              cartModel: cartModel,
+            ),
+            body: CartView(
+              cartModel: cartModel,
+              onRemove: (productId) => cartModel.removeProduct(productId, quantity: cartModel.getQuantity(productId)),
+            ),
+          ),
         ),
       ],
       errorBuilder: (context, state) => Scaffold(
@@ -34,14 +53,16 @@ class AppRouter {
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onThemeToggle;
+  final CartModel cartModel;
 
-  const HomeScreen({super.key, required this.onThemeToggle});
+  const HomeScreen({super.key, required this.onThemeToggle, required this.cartModel});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'RallyRed', 
+        title: 'RallyRed',
+        cartModel: cartModel,  // Access the cart model from the app state
       ),
       body: const SingleChildScrollView(
         child: Column(
@@ -66,24 +87,3 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class ProductDetailScreen extends StatelessWidget {
-  final String productId;
-
-  const ProductDetailScreen({super.key, required this.productId, required this.onThemeToggle});
-  final VoidCallback onThemeToggle;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Product Details',
-        showBackButton: true, 
-      ),
-      body: Center(
-        child: Text(
-          'Details for Product ID: $productId',
-          style: const TextStyle(fontSize: 18),
-        ),
-      ),
-    );
-  }
-}

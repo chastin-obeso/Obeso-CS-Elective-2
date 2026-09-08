@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'app/theme.dart';
 import '/app/route.dart';
 import 'package:flutter_web_plugins/url_strategy.dart'; 
+import 'cartstate.dart';
 
 void main() {
   usePathUrlStrategy();
@@ -28,8 +29,9 @@ class _RallyRedAppState extends State<RallyRedApp> {
           themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
+  final CartModel _cartModel = CartModel();
 
-  late final GoRouter _router = AppRouter.createRouter(onThemeToggle: toggleTheme);
+  late final GoRouter _router = AppRouter.createRouter(onThemeToggle: toggleTheme, cartModel: _cartModel);
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'main.dart';
+import 'cartstate.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -9,6 +10,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final PreferredSizeWidget? bottom;
+  final CartModel? cartModel;
 
   const CustomAppBar({
     super.key,
@@ -17,6 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.bottom,
+    this.cartModel,
   });
 
   @override
@@ -33,7 +36,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       scrolledUnderElevation: 0.5,
       automaticallyImplyLeading: false,
-
       title: Padding(
         padding: EdgeInsets.only(left: showBackButton ? 0.0 : 16.0),
         child: Image.asset(
@@ -42,11 +44,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           height: 36, 
         ),
       ),
-
       leading: leading ?? _buildDefaultLeading(context, isIOS),
-
       actions: actions ?? _buildDefaultActions(context, isDarkMode, isIOS),
-
       bottom: bottom,
     );
   }
@@ -79,16 +78,54 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           isIOS ? CupertinoIcons.search : Icons.search,
         ),
         onPressed: () {
-
+          // Search logic
         },
       ),
-      IconButton(
-        icon: Icon(
-          isIOS ? CupertinoIcons.shopping_cart : Icons.shopping_cart_outlined,
-        ),
-        onPressed: () {
+      Stack(
+        alignment: Alignment.center,
+        children: [
+          IconButton(
+            icon: Icon(
+              isIOS ? CupertinoIcons.shopping_cart : Icons.shopping_cart_outlined,
+            ),
+            onPressed: () => context.goNamed('cart'),
+          ),
+          if (cartModel != null)
+            ListenableBuilder(
+              listenable: cartModel!,
+              builder: (context, child) {
+                final totalItems = cartModel!.totalCount;
+                if (totalItems <= 0) return const SizedBox.shrink();
 
-        },
+                return Positioned(
+                  right: 6,
+                  top: 6,
+                  child: IgnorePointer(
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.error,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$totalItems',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onError,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       IconButton(
         icon: Icon(
