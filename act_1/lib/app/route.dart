@@ -5,8 +5,8 @@ import '/productlist.dart';
 import '/appbar.dart';
 import '/productdetail.dart';
 import '/cartstate.dart';
-import '/main.dart';
 import '/cart.dart';
+import '/checkout.dart';
 
 class AppRouter {
     static GoRouter createRouter({required VoidCallback onThemeToggle, required CartModel cartModel}) {
@@ -41,6 +41,18 @@ class AppRouter {
             ),
           ),
         ),
+        GoRoute(
+          path: '/checkout',
+          name: 'checkout',
+          builder: (context, state) => Scaffold(
+            appBar: CustomAppBar(
+              title: 'Checkout',
+              showBackButton: true,
+              cartModel: cartModel,
+            ),
+            body: CheckoutPage(cartModel: cartModel),
+          ),
+        ),
       ],
       errorBuilder: (context, state) => Scaffold(
         body: Center(
@@ -62,7 +74,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'RallyRed',
-        cartModel: cartModel,  // Access the cart model from the app state
+        cartModel: cartModel,  
       ),
       body: const SingleChildScrollView(
         child: Column(

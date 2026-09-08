@@ -29,13 +29,10 @@ class HeroBannerWidget extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Image
           Image.asset(
             imagePath,
             fit: BoxFit.cover,
           ),
-
-          // Gradient Overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -50,8 +47,6 @@ class HeroBannerWidget extends StatelessWidget {
               ),
             ),
           ),
-
-          // 2. Responsive Text Layout
           Positioned(
             bottom: 16,
             left: 16,
@@ -62,7 +57,6 @@ class HeroBannerWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Fits text to container width without clipping
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,

@@ -53,11 +53,11 @@ class ProductList extends StatelessWidget {
 
     final int crossAxisCount;
     if (screenWidth >= 1024) {
-      crossAxisCount = 4; // Desktop
+      crossAxisCount = 4; 
     } else if (screenWidth >= 600) {
-      crossAxisCount = 3; // Tablet
+      crossAxisCount = 3; 
     } else {
-      crossAxisCount = 2; // Phone
+      crossAxisCount = 2; 
     }
 
     final double horizontalPadding = screenWidth < 600
@@ -116,7 +116,6 @@ class ProductList extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-             // Image Container
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -125,7 +124,7 @@ class ProductList extends StatelessWidget {
                       top: Radius.circular(12.0),
                     ),
                   ),
-                  clipBehavior: Clip.antiAlias, // Ensures the image respects the container's border radius
+                  clipBehavior: Clip.antiAlias,
                   child: Image.asset(
                     product.imageUrl,
                     fit: BoxFit.cover,
@@ -134,8 +133,6 @@ class ProductList extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // Details Container
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Column(

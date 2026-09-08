@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '/herobanner.dart';
 import '/productlist.dart';
 import '/appbar.dart';
 import 'cartstate.dart';
@@ -27,10 +25,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Fetch product details specifically for this productId
     final product = Product.getById(widget.productId);
 
-    // Dynamic horizontal padding matching ProductList styling
     final double horizontalPadding = screenWidth < 600
         ? (screenWidth * 0.03).clamp(8.0, 16.0)
         : (screenWidth * 0.18).clamp(32.0, 300.0);
@@ -39,7 +35,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       appBar: CustomAppBar(
         title: product.name,
         showBackButton: true,
-        cartModel: widget.cartModel, // Pass cartModel to AppBar here
+        cartModel: widget.cartModel, 
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -81,7 +77,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // Gallery displaying images specific to this item
   Widget _buildGallery(ColorScheme colorScheme, Product product) {
     return Column(
       children: [
@@ -113,7 +108,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // Specific Product Metadata & Actions
   Widget _buildProductDetails(
     BuildContext context,
     ColorScheme colorScheme,
@@ -159,25 +153,66 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        // Add to Cart / Save Actions
         Row(
           children: [
             Expanded(
               child: SizedBox(
                 height: 48,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    // Use widget.cartModel to access the state property
-                    widget.cartModel.addProduct(product.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${product.name} to cart!')),
+                child: ListenableBuilder(
+                  listenable: widget.cartModel,
+                  builder: (context, child) {
+                    final quantity = widget.cartModel.items[product.id] ?? 0;
+
+                    if (quantity == 0) {
+                      return FilledButton.icon(
+                        onPressed: () {
+                          widget.cartModel.addProduct(product.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Added ${product.name} to cart!')),
+                          );
+                        },
+                        icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+                        label: const Text(
+                          'Add to Cart',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    }
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: colorScheme.primary),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            color: colorScheme.primary,
+                            onPressed: () {
+                              widget.cartModel.decrementProduct(product.id);
+                            },
+                          ),
+                          Text(
+                            '$quantity',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            color: colorScheme.primary,
+                            onPressed: () {
+                              widget.cartModel.incrementProduct(product.id);
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
-                  icon: const Icon(Icons.shopping_cart_outlined, size: 20),
-                  label: const Text(
-                    'Add to Cart',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
                 ),
               ),
             ),
@@ -192,9 +227,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () {
-                  // Wishlist toggle logic
-                },
+                onPressed: () {},
                 child: const Icon(Icons.favorite_border, size: 20),
               ),
             ),
