@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/pokemon.dart';
 import '../providers/pokemon_provider.dart';
 import '../screens/pokemon_detail_screen.dart';
 
-class PokemonCard extends StatelessWidget {
+class PokemonCard extends ConsumerWidget {
   final Pokemon pokemon;
 
   const PokemonCard({super.key, required this.pokemon});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nicknamesMap = ref.watch(nicknameProvider);
+    final customNickname = nicknamesMap[pokemon.id];
+
     final String formattedId = '#${pokemon.id.toString().padLeft(3, '0')}';
-    final String formattedName =
+    final String originalName =
         pokemon.name[0].toUpperCase() + pokemon.name.substring(1);
 
     return Card(
@@ -21,7 +24,7 @@ class PokemonCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          context.read<PokemonProvider>().selectPokemon(pokemon);
+          ref.read(selectedPokemonProvider.notifier).state = pokemon;
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -34,16 +37,33 @@ class PokemonCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: Text(
-                  formattedId,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                    fontSize: 11,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final isFav = ref.watch(favoritesProvider).contains(pokemon.id);
+                      return InkWell(
+                        onTap: () {
+                          ref.read(favoritesProvider.notifier).toggleFavorite(pokemon.id);
+                        },
+                        child: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.red : Colors.grey,
+                          size: 18,
+                        ),
+                      );
+                    },
                   ),
-                ),
+                  Text(
+                    formattedId,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
               ),
               Expanded(
                 child: pokemon.imageUrl.isNotEmpty
@@ -61,34 +81,52 @@ class PokemonCard extends StatelessWidget {
                       )
                     : const Icon(Icons.image_not_supported, size: 40),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                formattedName,
+                originalName,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
+                  fontSize: 14,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (customNickname != null)
+                Text(
+                  '"$customNickname"',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w600,
+                    color: pokemon.primaryTypeColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               const SizedBox(height: 6),
               if (pokemon.types.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: pokemon.primaryTypeColor,
-                    border: Border.all(color: Colors.grey[300]!, width: 1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    pokemon.types.first.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 2,
+                  alignment: WrapAlignment.center,
+                  children: pokemon.types.map((type) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: ref.read(pokemonTypeColorProvider(type)), 
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        type.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
             ],
           ),

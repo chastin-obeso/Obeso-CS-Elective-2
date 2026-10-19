@@ -1,18 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/pokemon_provider.dart';
 import '../widgets/pokemon_card.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/error_display.dart';
+import '../widgets/favorites_panel.dart';
+import '../widgets/type_filter_bar.dart';
 
-class PokemonGridScreen extends StatelessWidget {
+class PokemonGridScreen extends ConsumerStatefulWidget {
   const PokemonGridScreen({super.key});
 
   @override
+  ConsumerState<PokemonGridScreen> createState() => _PokemonGridScreenState();
+}
+
+class _PokemonGridScreenState extends ConsumerState<PokemonGridScreen> {
+  bool? _isFavoritesExpanded;
+  bool? _isFilterBarExpanded;
+
+  @override
   Widget build(BuildContext context) {
+    final pokemonAsyncValue = ref.watch(filteredPokemonProvider);
+    final selectedTypes = ref.watch(selectedTypesProvider);
+    final bool isFilterOpen = _isFilterBarExpanded ?? false;
+    final bool isFavOpen = _isFavoritesExpanded ?? false;
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         toolbarHeight: 80,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black12,
         title: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Image.asset(
@@ -20,72 +39,120 @@ class PokemonGridScreen extends StatelessWidget {
             height: 55,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) =>
-                const Text('Pokédex'),
+                const Text('Pokédex', style: TextStyle(color: Colors.black87)),
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(
+              selectedTypes.isNotEmpty ? Icons.filter_alt : Icons.filter_alt_outlined,
+              color: selectedTypes.isNotEmpty ? Colors.red : Colors.black87,
+            ),
+            tooltip: 'Toggle Type Filter',
+            onPressed: () {
+              setState(() {
+                _isFilterBarExpanded = !isFilterOpen;
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              isFavOpen ? Icons.star : Icons.star_border,
+              color: Colors.black87,
+            ),
+            tooltip: 'Toggle Favorites Panel',
+            onPressed: () {
+              setState(() {
+                _isFavoritesExpanded = !isFavOpen;
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black87),
             tooltip: 'Refresh Pokémon',
             onPressed: () {
-              context.read<PokemonProvider>().fetchPokemonList();
+              ref.read(pokemonProvider.notifier).fetch();
             },
           ),
           const SizedBox(width: 12),
         ],
       ),
-      body: Consumer<PokemonProvider>(
-        builder: (context, provider, child) {
-          switch (provider.status) {
-            case LoadingStatus.loading:
-            case LoadingStatus.initial:
-              return const LoadingIndicator();
+      body: Column(
+        children: [
+          FavoritesPanel(
+            isExpanded: isFavOpen,
+            onToggle: () {
+              setState(() {
+                _isFavoritesExpanded = false;
+              });
+            },
+          ),
+          
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            height: isFilterOpen ? 55 : 0,
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  const TypeFilterBar(),
+                  const Divider(height: 1, thickness: 1, color: Colors.black12),
+                ],
+              ),
+            ),
+          ),
 
-            case LoadingStatus.error:
-              return ErrorDisplay(
-                message: provider.errorMessage,
-                onRetry: () => provider.fetchPokemonList(),
-              );
+          Expanded(
+            child: pokemonAsyncValue.when(
+              loading: () => const LoadingIndicator(),
+              error: (error, stackTrace) => ErrorDisplay(
+                message: error.toString(),
+                onRetry: () => ref.read(pokemonProvider.notifier).fetch(),
+              ),
+              data: (pokemonList) {
+                if (pokemonList.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('No Pokémon found for this type.'),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () => ref.read(selectedTypesProvider.notifier).state = {},
+                          child: const Text('Clear Filters'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-            case LoadingStatus.success:
-              if (provider.pokemonList.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('No Pokémon found.'),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () => provider.fetchPokemonList(),
-                        child: const Text('Refresh'),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await ref.read(pokemonProvider.notifier).fetch();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                    child: GridView.builder(
+                      padding: const EdgeInsets.only(top: 12.0, bottom: 24.0),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5, 
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.85,
                       ),
-                    ],
+                      itemCount: pokemonList.length,
+                      itemBuilder: (context, index) {
+                        return PokemonCard(pokemon: pokemonList[index]);
+                      },
+                    ),
                   ),
                 );
-              }
-
-              return RefreshIndicator(
-                onRefresh: () => provider.fetchPokemonList(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: GridView.builder(
-                    padding: const EdgeInsets.only(top: 12.0, bottom: 24.0),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, 
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.85,
-                    ),
-                    itemCount: provider.pokemonList.length,
-                    itemBuilder: (context, index) {
-                      return PokemonCard(pokemon: provider.pokemonList[index]);
-                    },
-                  ),
-                ),
-              );
-          }
-        },
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

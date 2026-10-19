@@ -5,13 +5,25 @@ class Pokemon {
   final String name;
   final String imageUrl;
   final List<String> types;
+  final String? nickname;
 
   Pokemon({
     required this.id,
     required this.name,
     required this.imageUrl,
     required this.types,
+    this.nickname,
   });
+
+  Pokemon copyWith({String? nickname}) {
+    return Pokemon(
+      id: id,
+      name: name,
+      imageUrl: imageUrl,
+      types: types,
+      nickname: nickname ?? this.nickname,
+    );
+  }
 
   Color get primaryTypeColor {
     if (types.isEmpty) return Colors.grey;

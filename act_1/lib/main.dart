@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/pokemon_provider.dart';
 import 'screens/pokemon_grid_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; 
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => PokemonProvider()..fetchPokemonList(),
-      child: const MyApp(),
+    const ProviderScope(
+      child: MyApp(),
     ),
   );
 }
