@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'app/theme.dart';
-import '/app/route.dart';
-import 'package:flutter_web_plugins/url_strategy.dart'; 
-import 'cartstate.dart';
+import 'app/route.dart';
+import 'providers/cart_provider.dart';
+import 'package:go_router/go_router.dart';
 
-void main() {
+void main() async {
   usePathUrlStrategy();
-  runApp(const RallyRedApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables from .env
+  await dotenv.load(fileName: ".env");
+
+  // Initialize Supabase with loaded credentials
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
+
+  // Wrap root with ProviderScope for Riverpod
+  runApp(const ProviderScope(child: RallyRedApp()));
 }
 
 class RallyRedApp extends StatefulWidget {
@@ -29,9 +44,12 @@ class _RallyRedAppState extends State<RallyRedApp> {
           themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
-  final CartModel _cartModel = CartModel();
 
-  late final GoRouter _router = AppRouter.createRouter(onThemeToggle: toggleTheme, cartModel: _cartModel);
+  final CartModel _cartModel = CartModel();
+  late final GoRouter _router = AppRouter.createRouter(
+    onThemeToggle: toggleTheme,
+    cartModel: _cartModel,
+  );
 
   @override
   Widget build(BuildContext context) {
