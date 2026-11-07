@@ -12,16 +12,13 @@ void main() async {
   usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env
   await dotenv.load(fileName: ".env");
 
-  // Initialize Supabase with loaded credentials
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
-  // Wrap root with ProviderScope for Riverpod
   runApp(const ProviderScope(child: RallyRedApp()));
 }
 

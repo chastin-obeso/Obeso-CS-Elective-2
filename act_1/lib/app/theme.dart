@@ -31,7 +31,7 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.lightBackground,
       appBarTheme: _appBarTheme(colorScheme),
       elevatedButtonTheme: _elevatedButtonTheme(colorScheme),
-      cardTheme: CardThemeData(color: AppColors.lightSurface, elevation: 1),
+      cardTheme: const CardThemeData(color: AppColors.lightSurface, elevation: 1),
     );
   }
 
@@ -72,7 +72,6 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: colors.primary,
         foregroundColor: colors.onPrimary,
-        minimumSize: const Size.fromHeight(48),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
         ),

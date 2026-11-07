@@ -3,17 +3,49 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/product_provider.dart';
 import '../models/product.dart';
+import '../widgets/herobanner.dart';
 
 class ProductListView extends ConsumerWidget {
   const ProductListView({super.key});
+
+  void _showUpdateDialog(BuildContext context, WidgetRef ref, Product product) {
+    final priceController = TextEditingController(text: product.price.toString());
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Update Price: ${product.name}'),
+        content: TextField(
+          controller: priceController,
+          decoration: const InputDecoration(labelText: 'New Price (₱)'),
+          keyboardType: TextInputType.number,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newPrice = double.tryParse(priceController.text);
+              if (newPrice != null) {
+                await updateProductPrice(ref, product.id, newPrice);
+              }
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
-
-    final int crossAxisCount = screenWidth >= 1024 ? 4 : (screenWidth >= 600 ? 3 : 2);
-    final double horizontalPadding = screenWidth < 600 ? 16.0 : 32.0;
+    final int crossAxisCount = screenWidth >= 1200 ? 6 : (screenWidth >= 800 ? 3 : 2);
+    final double horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
 
     final categoriesAsync = ref.watch(categoriesProvider);
     final selectedCatId = ref.watch(selectedCategoryIdProvider);
@@ -22,14 +54,17 @@ class ProductListView extends ConsumerWidget {
     final minPrice = ref.watch(minPriceProvider);
     final maxPrice = ref.watch(maxPriceProvider);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          // Category Filter Chips
-          categoriesAsync.when(
+    return CustomScrollView(
+      slivers: [
+        const SliverToBoxAdapter(
+          child: HeroBannerWidget(),
+        ),
+
+        SliverToBoxAdapter(
+          child: categoriesAsync.when(
             data: (categories) => SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
               child: Row(
                 children: [
                   FilterChip(
@@ -59,15 +94,18 @@ class ProductListView extends ConsumerWidget {
             loading: () => const SizedBox(height: 40),
             error: (_, __) => const SizedBox.shrink(),
           ),
+        ),
 
-          // Price Range Slider Filter
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Price Range: ₱${minPrice.toStringAsFixed(0)} - ₱${maxPrice.toStringAsFixed(0)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                Text(
+                  'Price Range: ₱${minPrice.toStringAsFixed(0)} - ₱${maxPrice.toStringAsFixed(0)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
                 RangeSlider(
                   values: RangeValues(minPrice, maxPrice),
                   min: 0,
@@ -86,63 +124,74 @@ class ProductListView extends ConsumerWidget {
               ],
             ),
           ),
+        ),
 
-          // Product Grid View
-          Expanded(
-            child: productAsync.when(
-              data: (products) {
-                if (products.isEmpty) {
-                  return const Center(child: Text('No products match your filters.'));
-                }
+        productAsync.when(
+          data: (products) {
+            if (products.isEmpty) {
+              return const SliverFillRemaining(
+                child: Center(child: Text('No products match your filters.')),
+              );
+            }
 
-                return Padding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8.0),
-                  child: GridView.builder(
-                    itemCount: products.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemBuilder: (context, index) {
-                      final product = products[index];
-                      return _buildProductCard(context, colorScheme, product, ref);
-                    },
+            return SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8.0),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.68,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final product = products[index];
+                    return _buildProductCard(context, colorScheme, product, ref);
+                  },
+                  childCount: products.length,
+                ),
+              ),
+            );
+          },
+          loading: () => const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (err, stack) => SliverFillRemaining(
+            child: Center(child: Text('Error: $err')),
+          ),
+        ),
+
+        SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: currentPage > 0
+                        ? () => ref.read(currentPageProvider.notifier).state--
+                        : null,
+                    child: const Text('Previous'),
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'Page ${currentPage + 1}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => ref.read(currentPageProvider.notifier).state++,
+                    child: const Text('Next'),
+                  ),
+                ],
+              ),
             ),
           ),
-
-          // Pagination Controls
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: currentPage > 0
-                      ? () => ref.read(currentPageProvider.notifier).state--
-                      : null,
-                  child: const Text('Previous'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text('Page ${currentPage + 1}',
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                ElevatedButton(
-                  onPressed: () => ref.read(currentPageProvider.notifier).state++,
-                  child: const Text('Next'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -150,14 +199,14 @@ class ProductListView extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(8.0),
         onTap: () {
           context.goNamed('productDetail', pathParameters: {'id': product.id.toString()});
         },
         child: Container(
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(12.0),
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(8.0),
             border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
           ),
           child: Column(
@@ -165,17 +214,17 @@ class ProductListView extends ConsumerWidget {
             children: [
               Expanded(
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12.0)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8.0)),
                   child: Image.asset(
                     product.imageUrl,
                     fit: BoxFit.cover,
                     width: double.infinity,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 50),
+                    errorBuilder: (_, __, ___) => const Icon(Icons.image, size: 30),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(6.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -183,21 +232,29 @@ class ProductListView extends ConsumerWidget {
                       product.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: colorScheme.onSurface),
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11, color: colorScheme.onSurface),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '₱${product.price.toStringAsFixed(2)}',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: colorScheme.primary),
+                          '₱${product.price.toStringAsFixed(0)}',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10, color: colorScheme.primary),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () => deleteProductRecord(ref, product.id),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () => _showUpdateDialog(context, ref, product),
+                              child: const Icon(Icons.edit_outlined, size: 14, color: Colors.blue),
+                            ),
+                            const SizedBox(width: 4),
+                            InkWell(
+                              onTap: () => deleteProductRecord(ref, product.id),
+                              child: const Icon(Icons.delete_outline, size: 14, color: Colors.red),
+                            ),
+                          ],
                         ),
                       ],
                     ),

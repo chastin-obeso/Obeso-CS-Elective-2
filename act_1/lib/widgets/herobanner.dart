@@ -11,7 +11,7 @@ class HeroBannerWidget extends StatelessWidget {
     this.height,
     this.title = 'LATEST RELEASES',
     this.subtitle = 'Pickleball Gear Endorsed by Hayden Patriquin',
-    this.imagePath = 'assets/photo1.jpg',
+    this.imagePath = 'assets/header.jpg',
   });
 
   @override
