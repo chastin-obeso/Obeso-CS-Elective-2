@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../main.dart';
+import '../providers/auth_provider.dart';
 import '../providers/cart_provider.dart';
 
 class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -31,7 +32,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return AppBar(
       centerTitle: false,
-      titleSpacing: 0, 
+      titleSpacing: 0,
       backgroundColor: colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
       elevation: 0,
@@ -42,11 +43,11 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
         child: Image.asset(
           isDarkMode ? 'assets/logo_dark.png' : 'assets/logo_light.png',
           fit: BoxFit.contain,
-          height: 36, 
+          height: 36,
         ),
       ),
       leading: leading ?? _buildDefaultLeading(context, isIOS),
-      actions: actions ?? _buildDefaultActions(context, isDarkMode, isIOS),
+      actions: actions ?? _buildDefaultActions(context, ref, isDarkMode, isIOS),
       bottom: bottom,
     );
   }
@@ -70,9 +71,12 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   List<Widget> _buildDefaultActions(
     BuildContext context,
+    WidgetRef ref,
     bool isDarkMode,
     bool isIOS,
   ) {
+    final user = ref.watch(currentUserProvider);
+
     return [
       IconButton(
         icon: Icon(
@@ -136,6 +140,31 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ),
         onPressed: () => RallyRedApp.of(context).toggleTheme(),
       ),
+      if (user != null)
+        IconButton(
+          tooltip: 'Logout (${user.email ?? 'User'})',
+          icon: Icon(
+            isIOS ? CupertinoIcons.square_arrow_right : Icons.logout,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          onPressed: () async {
+            await ref.read(authServiceProvider).signOut();
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Logged out successfully')),
+              );
+              context.goNamed('login');
+            }
+          },
+        )
+      else
+        IconButton(
+          tooltip: 'Login',
+          icon: Icon(
+            isIOS ? CupertinoIcons.person : Icons.login,
+          ),
+          onPressed: () => context.goNamed('login'),
+        ),
       const SizedBox(width: 16),
     ];
   }
