@@ -9,6 +9,8 @@ import '../views/cart_view.dart';
 import '../views/checkout_view.dart';
 import '../views/login_view.dart';
 import '../views/signup_view.dart';
+import '../views/order_history_view.dart';
+import '../views/admin_orders_view.dart';
 import '../widgets/appbar.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -38,17 +40,15 @@ class AppRouter {
       refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
       redirect: (context, state) {
         final isLoggedIn = supabase.auth.currentSession != null;
-        final isAuthRoute =
-            state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+        final loc = state.matchedLocation;
+        final isAuthRoute = loc == '/login' || loc == '/signup';
 
+        if (!isLoggedIn && !isAuthRoute) {
+          return '/login';
+        }
         if (isLoggedIn && isAuthRoute) {
           return '/';
         }
-
-        if (!isLoggedIn && state.matchedLocation == '/checkout') {
-          return '/login';
-        }
-
         return null;
       },
       routes: [
@@ -65,9 +65,9 @@ class AppRouter {
         GoRoute(
           path: '/',
           name: 'home',
-          builder: (context, state) => Scaffold(
-            appBar: CustomAppBar(title: 'RallyRed', cartModel: cartModel),
-            body: const HomeView(),
+          builder: (context, state) => const Scaffold(
+            appBar: CustomAppBar(title: 'RallyRed'),
+            body: HomeView(),
           ),
         ),
         GoRoute(
@@ -75,43 +75,46 @@ class AppRouter {
           name: 'productDetail',
           builder: (context, state) {
             final id = state.pathParameters['id'] ?? '1';
-            return ProductDetailView(productId: id, cartModel: cartModel);
+            return ProductDetailView(productId: id);
           },
         ),
         GoRoute(
           path: '/cart',
           name: 'cart',
-          builder: (context, state) => Scaffold(
+          builder: (context, state) => const Scaffold(
             appBar: CustomAppBar(
               title: 'Your Cart',
               showBackButton: true,
-              cartModel: cartModel,
             ),
-            body: CartView(cartModel: cartModel),
+            body: CartView(),
           ),
-          redirect: (context, state) {
-            final isLoggedIn = supabase.auth.currentSession != null;
-            final isAuthRoute =
-                state.matchedLocation == '/login' || state.matchedLocation == '/signup';
-            final isProtectedRoute =
-                state.matchedLocation == '/cart' || state.matchedLocation == '/checkout';
-
-            if (isLoggedIn && isAuthRoute) {
-              return '/';
-            }
-
-            if (!isLoggedIn && isProtectedRoute) {
-              return '/login';
-            }
-
-            return null;
-          },
-
         ),
         GoRoute(
           path: '/checkout',
           name: 'checkout',
-          builder: (context, state) => CheckoutView(cartModel: cartModel),
+          builder: (context, state) => const CheckoutView(),
+        ),
+        GoRoute(
+          path: '/orders',
+          name: 'orderHistory',
+          builder: (context, state) => const Scaffold(
+            appBar: CustomAppBar(
+              title: 'My Orders',
+              showBackButton: true,
+            ),
+            body: OrderHistoryView(),
+          ),
+        ),
+        GoRoute(
+          path: '/admin/orders',
+          name: 'adminOrders',
+          builder: (context, state) => const Scaffold(
+            appBar: CustomAppBar(
+              title: 'All Orders (Admin)',
+              showBackButton: true,
+            ),
+            body: AdminOrdersView(),
+          ),
         ),
       ],
     );

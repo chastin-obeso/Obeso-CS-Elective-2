@@ -1,61 +1,71 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
-import 'app/theme.dart';
-import 'app/route.dart';
-import 'providers/cart_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'routes/route.dart';
+import 'theme/theme.dart';
 
-void main() async {
-  usePathUrlStrategy();
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: '.env');
+
+  final supabaseUrl =
+      dotenv.env['SUPABASE_URL'] ?? 'https://jeinztdovrfudthtajgo.supabase.co';
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    publishableKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
-  runApp(const ProviderScope(child: RallyRedApp()));
+  runApp(
+    const ProviderScope(
+      child: RallyRedApp(),
+    ),
+  );
 }
 
-class RallyRedApp extends StatefulWidget {
+class RallyRedApp extends ConsumerStatefulWidget {
   const RallyRedApp({super.key});
 
-  static _RallyRedAppState of(BuildContext context) =>
-      context.findAncestorStateOfType<_RallyRedAppState>()!;
+  static RallyRedAppState of(BuildContext context) {
+    final state = context.findAncestorStateOfType<RallyRedAppState>();
+    assert(state != null, 'No RallyRedAppState found in context');
+    return state!;
+  }
 
   @override
-  State<RallyRedApp> createState() => _RallyRedAppState();
+  ConsumerState<RallyRedApp> createState() => RallyRedAppState();
 }
 
-class _RallyRedAppState extends State<RallyRedApp> {
-  ThemeMode themeMode = ThemeMode.light;
+class RallyRedAppState extends ConsumerState<RallyRedApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+  GoRouter? _router;
 
   void toggleTheme() {
     setState(() {
-      themeMode =
-          themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      if (_themeMode == ThemeMode.dark) {
+        _themeMode = ThemeMode.light;
+      } else {
+        _themeMode = ThemeMode.dark;
+      }
     });
   }
 
-  final CartModel _cartModel = CartModel();
-  late final GoRouter _router = AppRouter.createRouter(
-    onThemeToggle: toggleTheme,
-    cartModel: _cartModel,
-  );
-
   @override
   Widget build(BuildContext context) {
+    _router ??= AppRouter.createRouter(
+      onThemeToggle: toggleTheme,
+    );
+
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
       title: 'RallyRed',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
+      themeMode: _themeMode,
       routerConfig: _router,
     );
   }

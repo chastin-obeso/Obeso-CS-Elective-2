@@ -76,7 +76,7 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
   Future<void> _handleGoogleSignUp() async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(authServiceProvider).signInWithGoogle();
+      await Supabase.instance.client.auth.signInWithOAuth(OAuthProvider.google);
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

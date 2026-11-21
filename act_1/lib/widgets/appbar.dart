@@ -12,7 +12,6 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final PreferredSizeWidget? bottom;
-  final CartModel? cartModel;
 
   const CustomAppBar({
     super.key,
@@ -21,7 +20,6 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.bottom,
-    this.cartModel,
   });
 
   @override
@@ -40,10 +38,17 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       title: Padding(
         padding: EdgeInsets.only(left: showBackButton ? 0.0 : 16.0),
-        child: Image.asset(
-          isDarkMode ? 'assets/logo_dark.png' : 'assets/logo_light.png',
-          fit: BoxFit.contain,
-          height: 36,
+        child: InkWell(
+          onTap: () => context.goNamed('home'),
+          child: Image.asset(
+            isDarkMode ? 'assets/logo_dark.png' : 'assets/logo_light.png',
+            fit: BoxFit.contain,
+            height: 36,
+            errorBuilder: (_, __, ___) => Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
         ),
       ),
       leading: leading ?? _buildDefaultLeading(context, isIOS),
@@ -56,9 +61,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
     if (!showBackButton) return null;
 
     return IconButton(
-      icon: Icon(
-        isIOS ? CupertinoIcons.back : Icons.arrow_back,
-      ),
+      icon: Icon(isIOS ? CupertinoIcons.back : Icons.arrow_back),
       onPressed: () {
         if (context.canPop()) {
           context.pop();
@@ -76,63 +79,63 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
     bool isIOS,
   ) {
     final user = ref.watch(currentUserProvider);
+    final isAdmin = ref.watch(isAdminProvider);
+    final cart = ref.watch(cartProvider);
 
     return [
-      IconButton(
-        icon: Icon(
-          isIOS ? CupertinoIcons.search : Icons.search,
-        ),
-        onPressed: () {
-          // Search logic
-        },
-      ),
-      Stack(
-        alignment: Alignment.center,
-        children: [
-          IconButton(
-            icon: Icon(
-              isIOS ? CupertinoIcons.shopping_cart : Icons.shopping_cart_outlined,
-            ),
-            onPressed: () => context.goNamed('cart'),
+      if (user != null)
+        IconButton(
+          tooltip: isAdmin ? 'Manage Orders' : 'Order History',
+          icon: Icon(
+            isIOS ? CupertinoIcons.doc_plaintext : Icons.receipt_long_outlined,
           ),
-          if (cartModel != null)
-            ListenableBuilder(
-              listenable: cartModel!,
-              builder: (context, child) {
-                final totalItems = cartModel!.totalCount;
-                if (totalItems <= 0) return const SizedBox.shrink();
-
-                return Positioned(
-                  right: 6,
-                  top: 6,
-                  child: IgnorePointer(
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error,
-                        shape: BoxShape.circle,
+          onPressed: () =>
+              context.goNamed(isAdmin ? 'adminOrders' : 'orderHistory'),
+        ),
+      if (user != null && !isAdmin)
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              tooltip: 'Cart',
+              icon: Icon(
+                isIOS
+                    ? CupertinoIcons.shopping_cart
+                    : Icons.shopping_cart_outlined,
+              ),
+              onPressed: () => context.goNamed('cart'),
+            ),
+            if (cart.totalCount > 0)
+              Positioned(
+                right: 6,
+                top: 6,
+                child: IgnorePointer(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${cart.totalCount}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onError,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
                       ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        '$totalItems',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onError,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                );
-              },
-            ),
-        ],
-      ),
+                ),
+              ),
+          ],
+        ),
       IconButton(
+        tooltip: isDarkMode ? 'Light Mode' : 'Dark Mode',
         icon: Icon(
           isDarkMode
               ? (isIOS ? CupertinoIcons.sun_max : Icons.light_mode_outlined)
@@ -148,6 +151,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
             color: Theme.of(context).colorScheme.error,
           ),
           onPressed: () async {
+            ref.read(cartProvider).clearCart();
             await ref.read(authServiceProvider).signOut();
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -160,12 +164,10 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
       else
         IconButton(
           tooltip: 'Login',
-          icon: Icon(
-            isIOS ? CupertinoIcons.person : Icons.login,
-          ),
+          icon: Icon(isIOS ? CupertinoIcons.person : Icons.login),
           onPressed: () => context.goNamed('login'),
         ),
-      const SizedBox(width: 16),
+      const SizedBox(width: 12),
     ];
   }
 
